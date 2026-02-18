@@ -1,0 +1,17 @@
+{
+  "name": "maven-slack-bot",
+  "version": "1.0.0",
+  "description": "Maven — Manager Development Coaching Bot for Slack",
+  "main": "maven-slack-bot.js",
+  "scripts": {
+    "start": "node maven-slack-bot.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.17.0",
+    "@anthropic-ai/sdk": "^0.24.0",
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
