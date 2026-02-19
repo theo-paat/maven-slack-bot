@@ -81,13 +81,20 @@ are made through intentional practice, self-awareness, and courageous action.
 
 ${LEADERSHIP_CODE}
 
-Your coaching style:
-- Warm, direct, and practical — like a trusted advisor who tells the truth with care
-- Always anchor advice to Leadership Code principles by name
+Your voice and style is inspired by Adam Grant: research-backed, direct, and counterintuitive. 
+You challenge conventional management wisdom with evidence. You use punchy, memorable sentences. 
+You cite behavioral science and organizational psychology naturally. You're not afraid to say 
+"the data says otherwise" or "most managers get this backwards." You combine intellectual rigor 
+with genuine warmth. You tell stories that illuminate principles. You make people think differently, 
+not just feel better. Every insight should feel like something worth sharing.
+
+Your coaching approach:
+- Lead with a counterintuitive insight or reframe — challenge the manager's assumptions first
+- Back claims with research or real-world evidence when possible
+- Be direct. Say the hard thing clearly. Don't bury the lead.
 - Focus on just-in-time coaching — managers need help RIGHT NOW, not theory
-- Use concrete language, real scenarios, and immediately actionable steps
-- Challenge assumptions gently but honestly
 - Adult learners need WHY before HOW — always lead with purpose
+- End with a question that makes them think, not just act
 
 Formatting rules for Slack (STRICT):
 - Use *bold* for key terms and emphasis
@@ -453,6 +460,113 @@ function buildClosingBlocks() {
     },
   ];
 }
+
+// ─── /maven-pdf Slash Command ────────────────────────────────────────────────
+
+app.command("/maven-pdf", async ({ command, ack, client }) => {
+  await ack();
+  const userId = command.user_id;
+  const topicArg = command.text?.trim();
+
+  // Show topic picker if no argument
+  if (!topicArg) {
+    await client.chat.postMessage({
+      channel: userId,
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*📄 Maven 1-Pager Generator*
+
+Type `/maven-pdf [topic]` to generate a downloadable coaching guide.
+
+Available topics:
+• `hard-conversations`
+• `better-11s`
+• `performance-issues`
+• `giving-feedback`
+• `team-conflict`
+• `new-manager`
+• `team-development`",
+          },
+        },
+      ],
+      text: "Maven PDF Generator",
+    });
+    return;
+  }
+
+  // Map slug to topic key
+  const slugMap = {
+    "hard-conversations": "hard_conversations",
+    "better-11s": "better_11s",
+    "performance-issues": "performance_issues",
+    "giving-feedback": "giving_feedback",
+    "team-conflict": "team_conflict",
+    "new-manager": "new_manager",
+    "team-development": "team_development",
+  };
+
+  const topicKey = slugMap[topicArg.toLowerCase()];
+  if (!topicKey || !TOPICS[topicKey]) {
+    await client.chat.postMessage({
+      channel: userId,
+      text: `Topic "${topicArg}" not found. Try: hard-conversations, better-11s, performance-issues, giving-feedback, team-conflict, new-manager, or team-development`,
+    });
+    return;
+  }
+
+  const topic = TOPICS[topicKey];
+
+  try {
+    await client.chat.postMessage({ channel: userId, text: `⏳ Generating your Maven 1-pager on *${topic.label}*...` });
+
+    // Generate enhanced PDF content via Claude
+    const pdfContent = await anthropic.messages.create({
+      model: "claude-opus-4-5",
+      max_tokens: 1000,
+      system: MAVEN_SYSTEM_PROMPT,
+      messages: [{
+        role: "user",
+        content: `Create a concise, high-impact coaching guide on "${topic.label}" for managers. 
+        Include: a bold opening insight, the core WHY, 3 actionable tips, 3 big ideas, and one reflection question.
+        Write in Adam Grant's voice — research-backed, counterintuitive, direct.
+        Format as clean plain text suitable for a 1-page PDF. Use clear section labels.`
+      }],
+    });
+
+    const guideText = pdfContent.content[0].text;
+
+    // Post as a well-formatted Slack message (acts as the 1-pager)
+    await client.chat.postMessage({
+      channel: userId,
+      blocks: [
+        {
+          type: "header",
+          text: { type: "plain_text", text: `Maven 1-Pager: ${topic.label}` },
+        },
+        { type: "divider" },
+        {
+          type: "section",
+          text: { type: "mrkdwn", text: guideText },
+        },
+        { type: "divider" },
+        {
+          type: "context",
+          elements: [{
+            type: "mrkdwn",
+            text: `_Maven — Leadership Code Coaching Guide | To save: copy this message or use Slack's "Save" feature_`,
+          }],
+        },
+      ],
+      text: `Maven 1-Pager: ${topic.label}`,
+    });
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    await client.chat.postMessage({ channel: userId, text: "Something went wrong generating your guide. Try again!" });
+  }
+});
 
 // ─── /maven Slash Command ─────────────────────────────────────────────────────
 
