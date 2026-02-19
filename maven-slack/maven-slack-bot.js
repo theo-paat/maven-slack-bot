@@ -477,18 +477,7 @@ app.command("/maven-pdf", async ({ command, ack, client }) => {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "*📄 Maven 1-Pager Generator*
-
-Type `/maven-pdf [topic]` to generate a downloadable coaching guide.
-
-Available topics:
-• `hard-conversations`
-• `better-11s`
-• `performance-issues`
-• `giving-feedback`
-• `team-conflict`
-• `new-manager`
-• `team-development`",
+            text: "*📄 Maven 1-Pager Generator*\n\nType `/maven-pdf [topic]` to generate a coaching guide.\n\nAvailable topics:\n• `hard-conversations`\n• `better-11s`\n• `performance-issues`\n• `giving-feedback`\n• `team-conflict`\n• `new-manager`\n• `team-development`",
           },
         },
       ],
